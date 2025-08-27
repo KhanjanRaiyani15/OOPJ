@@ -1,5 +1,6 @@
 import java.util.Scanner;
 //Week-4 Class-1 User
+/*
     class User {
         String username;
         String password;
@@ -7,13 +8,84 @@ import java.util.Scanner;
         double balance;
 
         User(String username, String email, String password) {
+            this.username = username;
+            this.email = email;
+            this.password = password;
+            this.balance = 0.0;
+        }
+    }
+*/
+
+/*---------------------------------------------------------------------------------------------------------*/
+//Week-5 Updated User Class with Encapsulation
+class User {
+
+    private String username;
+    private String password;
+    private String email;
+
+    public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.balance = 0.0;
-        }
     }
 
+    public String getUsername()
+    {
+         return username; 
+    }
+    public void setUsername(String username)
+    { 
+        this.username = username;
+    }
+
+    public String getPassword()
+    { 
+        return password; 
+    }
+    public void setPassword(String password)
+    { 
+        this.password = password; 
+    }
+
+    public String getEmail() 
+    { 
+        return email; 
+    }
+
+    public void setEmail(String email) 
+    { 
+        this.email = email; 
+    }
+}
+/*---------------------------------------------------------------------------------------------------------*/
+// New BankAccount class for encapsulation and user linking
+class BankAccount {
+    
+    private static int accountCounter = 100; // Starting account number
+    private int accountNumber;
+    private double balance;
+
+    public BankAccount() {
+        this.accountNumber = ++accountCounter;
+
+        this.balance = 0.0;
+    }
+
+    public int getAccountNumber() 
+    { 
+        return accountNumber; 
+    }
+    public double getBalance() 
+    { 
+        return balance; 
+    }
+    public void setBalance(double balance) 
+    { 
+        this.balance = balance; 
+    }
+
+}
 /*---------------------------------------------------------------------------------------------------------*/
 //Main Class BankManagementSystem...
 public class BankManagementSystem {
@@ -28,7 +100,8 @@ public class BankManagementSystem {
 
     //Object Declaration from User class...
     User[] users = new User[s];
-
+    // New: Array for BankAccount objects
+    BankAccount[] accounts = new BankAccount[s];
     
     Scanner sc = new Scanner(System.in);
 
@@ -63,20 +136,46 @@ public class BankManagementSystem {
     }
 
     boolean isValidEmail(String email) {
-        email = email.trim();
-        if (!email.contains("@") || !email.contains(".")) {
-            return false;
-        }
-        /*
-         * int atPos = email.indexOf("@");
-         * int dotPos = email.lastIndexOf(".");
-         * if (atPos < 1 || dotPos < atPos + 2 || dotPos >= email.length() - 1) {
-         * return false;
-         * }
-         */
-        return true;
+    email = email.trim();
+
+
+    if (!email.contains("@") || !email.contains(".")) {
+        return false;
     }
 
+
+    String[] parts = email.split("@");
+    if (parts.length != 2) {
+        return false; 
+    }
+
+    String fpart = parts[0];
+    String spart = parts[1];
+
+    if (fpart.isEmpty() || spart.isEmpty()) {
+        return false;
+    }
+
+    String[] domain = {"gmail.com", "yahoo.com", "icloud.com"};
+    boolean validDomain = false;
+for (int i = 0; i < domain.length; i++) {
+    if (spart.equalsIgnoreCase(domain[i])) {
+        validDomain = true;
+        break;
+    }
+}
+
+    if (!validDomain) {
+        return false; 
+    }
+
+
+    if (!spart.matches("^[A-Za-z0-9._-]+$")) {
+        return false;
+    }
+
+    return true;
+}
 /*=========================================================================================================*/
     // Method 1 getdata...
     void getdata() {
@@ -130,7 +229,7 @@ public class BankManagementSystem {
         }
 
         for (int i = 0; i < n; i++) {
-            if (users[i].username.equals(username)) {
+            if (users[i].getUsername().equals(username)) {
                 System.out.println("\nOops! Username already exists. Try another.");
                 return;
             }
@@ -142,7 +241,7 @@ public class BankManagementSystem {
             return;
         }
         while (!isValidEmail(email)) {
-            System.out.println("Invalid email format. Please try again.");
+            System.out.println("Invalid email format. Please try again.\nMake sure that your domain one must be from \nthese {gmail.com}, {yahoo.com}, {icloud.com} \nand '@' & '.' must be placed in your Email.");
             email = sc.nextLine();
         }
 
@@ -165,7 +264,9 @@ public class BankManagementSystem {
         // balances[n] = 0.0;
 
         //Week-4 part
-        users[n] = new User(username, email, password);
+         users[n] = new User(username, email, password);
+        //Week-5 part
+         accounts[n] = new BankAccount();
         n++;
 
         System.out.println("\nRegistration successful!");
@@ -197,14 +298,15 @@ public class BankManagementSystem {
         // Checks the Equality of the Login info. to Registration Info., if matched then return True value, else Error!
         for (int i = 0; i < n; i++) {
             // WITHOUT CLASS => if (!(usernames[i].equals(username) && passwords[i].equals(password) && emails[i].equals(email)))
-            if(!(users[i].username.equals(username) && users[i].email.equals(email) && users[i].password.equals(password))) {
+            if(!(users[i].getUsername().equals(username) && users[i].getEmail().equals(email) && users[i].getPassword().equals(password))) {
                 System.out.println("\nInvalid credentials!, Try again!");
             }
             // (Else part) to Give 5 option Deposit, Withdraw, View Balance, View Acc.
             // Details & Logout facility.
             else {
                 System.out.println("\nLogin successful...");
-                System.out.printf("Welcome, %s!\nYour balance is Rs. %.2f\n\n", username, users[i].balance);
+                System.out.printf("Welcome, %s!\nYour balance is Rs. %.2f\n", username,accounts[i].getBalance());
+                System.out.println("Your Account Number is: " + accounts[i].getAccountNumber());
                 System.out.println("Choose below option to use our banking facility:");
 
                 boolean exit = false;
@@ -227,9 +329,9 @@ public class BankManagementSystem {
                         if (amount <= 0) {
                             System.out.println("Incorrect Amount to Deposit!");
                         } else {
-                            users[i].balance = users[i].balance + amount;
+                            accounts[i].setBalance(accounts[i].getBalance() + amount);
                             System.out.println("You have Deposited: " + amount);
-                            System.out.println("After Transaction Your Account Current Balance: " + users[i].balance);
+                            System.out.println("After Transaction Your Account Current Balance: " + accounts[i].getBalance());
                         }
 
                     } else if (option == 2) {
@@ -238,8 +340,8 @@ public class BankManagementSystem {
                         if (amount <= 0) {
                             System.out.println("Incorrect Amount to Withdraw!");
                         } else {
-                            if (amount <= users[i].balance) {
-                                users[i].balance = users[i].balance - amount;
+                            if (amount <= accounts[i].getBalance()) {
+                                accounts[i].setBalance(accounts[i].getBalance() - amount);
                                 System.out.println("Withdrawn: " + amount);
                             } else {
                                 System.out.println(
@@ -247,14 +349,18 @@ public class BankManagementSystem {
                             }
                         }
 
-                        System.out.println("After Transaction Your Account Current Balance: " + users[i].balance);
+                        System.out.println("After Transaction Your Account Current Balance: " + accounts[i].getBalance());
 
                     } else if (option == 3) {
-                        System.out.println("Account Current Balance: " + users[i].balance);
+                        System.out.println("Account Current Balance: " + accounts[i].getBalance());
                     } else if (option == 4) {
+                        System.out.println("===============================");
                         System.out.println("Username: " + username);
                         System.out.println("Email: " + email);
-                        System.out.println("Available Balance: " + users[i].balance);
+                        System.out.println("Account Number: " + accounts[i].getAccountNumber());
+                        System.out.println("Available Balance: " + accounts[i].getBalance());
+                        System.out.println("===============================");
+
                     } else if (option == 5) {
                         System.out.println("Logout Successfully...");
                         break;
