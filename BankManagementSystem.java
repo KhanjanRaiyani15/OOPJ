@@ -1,5 +1,7 @@
 import java.util.Scanner;
+
 //Week-4 Class-1 User
+//class User {// old User class without inheritance
 /*
     class User {
         String username;
@@ -18,7 +20,7 @@ import java.util.Scanner;
 
 /*---------------------------------------------------------------------------------------------------------*/
 //Week-5 Updated User Class with Encapsulation
-class User {
+/*class User {
 
     private String username;
     private String password;
@@ -57,10 +59,10 @@ class User {
     { 
         this.email = email; 
     }
-}
+}*/
 /*---------------------------------------------------------------------------------------------------------*/
 // New BankAccount class for encapsulation and user linking
-class BankAccount {
+/*class BankAccount {
     
     private static int accountCounter = 100; // Starting account number
     private int accountNumber;
@@ -85,10 +87,116 @@ class BankAccount {
         this.balance = balance; 
     }
 
+}*/
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+//Week-6 Part
+class Person {
+    protected String name;
+    protected String email;
+}
+
+//Updated User class that extends Person
+class User extends Person {
+
+    private String username;
+    private String password;
+    
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;   // inherited from Person
+        this.password = password;
+    }
+
+    public String getUsername() { 
+        return username; 
+    }
+    public void setUsername(String username) { 
+        this.username = username; 
+    }
+
+    public String getPassword() { 
+        return password; 
+    }
+    public void setPassword(String password) { 
+        this.password = password; 
+    }
+
+    // Overridden getter/setter for inherited email
+    public String getEmail() { 
+        return email; 
+    }
+    public void setEmail(String email) { 
+        this.email = email; 
+    }
+}
+
+/*---------------------------------------------------------------------------------------------------------*/
+//class BankAccount { ... }   // old code is above commented (Week-5)
+
+//Abstract Account class with subclasses
+abstract class Account {
+    private static int accountCounter = 100; 
+    protected int accountNumber;
+    protected double balance;
+
+    public Account() {
+        this.accountNumber = ++accountCounter;
+        this.balance = 0.0;
+    }
+
+    public int getAccountNumber() 
+    { 
+        return accountNumber; 
+    }
+    public double getBalance() 
+    { 
+        return balance; 
+    }
+    public void deposit(double amount) 
+    { 
+        if (amount <= 0) {
+            System.out.println("Incorrect Amount to Deposit!");
+        } else {
+            balance += amount; 
+            System.out.println("You have Deposited: " + amount);
+            
+        }
+        
+    }
+
+    //Abstract method for withdrawal
+    public abstract void withdraw(double amount);
+}
+
+//SavingAccount subclass with rule: balance must stay >= 500
+class SavingAccount extends Account {
+    //@Override
+    public void withdraw(double amount) {
+        if (amount > 0 && balance - amount >= 500) {
+            balance -= amount;
+            System.out.println("Withdrawn: " + amount);
+        } else {
+            System.out.println("Insufficient balance! Savings account must keep at least Rs.500.");
+        }
+    }
+}
+
+//CurrentAccount subclass with overdraft allowed up to -1000
+class CurrentAccount extends Account {
+    //@Override
+    public void withdraw(double amount) {
+        if (amount > 0 && balance - amount >= -1000) {
+            balance -= amount;
+            System.out.println("Withdrawn: " + amount);
+        } else {
+            System.out.println("Overdraft limit exceeded! You cannot withdraw this amount.");
+        }
+    }
 }
 /*---------------------------------------------------------------------------------------------------------*/
 //Main Class BankManagementSystem...
-public class BankManagementSystem {
+ class BankManagementSystem {
 
     // Declarations of whole code...
     int s = 100;
@@ -100,9 +208,13 @@ public class BankManagementSystem {
 
     //Object Declaration from User class...
     User[] users = new User[s];
-    // New: Array for BankAccount objects
-    BankAccount[] accounts = new BankAccount[s];
-    
+
+    // New: Array for BankAccount objects(Week-5)
+    // BankAccount[] accounts = new BankAccount[s];
+
+    //Replace with polymorphic Account array(Week-6)
+
+    Account[] accounts = new Account[s];
     Scanner sc = new Scanner(System.in);
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -266,7 +378,20 @@ for (int i = 0; i < domain.length; i++) {
         //Week-4 part
          users[n] = new User(username, email, password);
         //Week-5 part
-         accounts[n] = new BankAccount();
+        //accounts[n] = new BankAccount();
+
+        // Week-6 part Ask user to select account type
+        System.out.println("Choose Account Type: 1. Saving  2. Current");
+        int type = sc.nextInt(); sc.nextLine();
+
+        if (type == 1) 
+        {
+        accounts[n] = new SavingAccount();
+        }
+        else
+        {
+             accounts[n] = new CurrentAccount();
+        }
         n++;
 
         System.out.println("\nRegistration successful!");
@@ -326,29 +451,14 @@ for (int i = 0; i < domain.length; i++) {
                     if (option == 1) {
                         System.out.print("Enter amount: ");
                         double amount = sc.nextDouble();
-                        if (amount <= 0) {
-                            System.out.println("Incorrect Amount to Deposit!");
-                        } else {
-                            accounts[i].setBalance(accounts[i].getBalance() + amount);
-                            System.out.println("You have Deposited: " + amount);
-                            System.out.println("After Transaction Your Account Current Balance: " + accounts[i].getBalance());
-                        }
-
+                        accounts[i].deposit(amount);
+                        System.out.println("After Transaction Your Account Current Balance: " + accounts[i].getBalance());
+                        
                     } else if (option == 2) {
                         System.out.print("Enter amount: ");
                         double amount = sc.nextDouble();
-                        if (amount <= 0) {
-                            System.out.println("Incorrect Amount to Withdraw!");
-                        } else {
-                            if (amount <= accounts[i].getBalance()) {
-                                accounts[i].setBalance(accounts[i].getBalance() - amount);
-                                System.out.println("Withdrawn: " + amount);
-                            } else {
-                                System.out.println(
-                                        "Insufficient balance!, You cannot withdraw money greater than your current Balance.");
-                            }
-                        }
 
+                        accounts[i].withdraw(amount);
                         System.out.println("After Transaction Your Account Current Balance: " + accounts[i].getBalance());
 
                     } else if (option == 3) {
