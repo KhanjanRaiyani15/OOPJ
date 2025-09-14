@@ -1,5 +1,6 @@
 import java.util.Scanner;
 
+
 //Week-4 Class-1 User
 //class User {// old User class without inheritance
 /*
@@ -90,14 +91,63 @@ import java.util.Scanner;
 }*/
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+// Week 7: Interfaces
+interface ILogin {
+    boolean login(String username, String password);
+}
+
+interface ITransaction {
+    void deposit(double amount);
+    void withdraw(double amount);
+}
+
+// Week 7: Loan class
+class Loan {
+    private double principal;
+    private double interestRate;
+    private int termMonths;
+    private double monthlyPayment;
+
+    public Loan(double principal, double interestRate, int termMonths) {
+        this.principal = principal;
+        this.interestRate = interestRate;
+        this.termMonths = termMonths;
+        calculateMonthlyPayment();
+    }
+
+    private void calculateMonthlyPayment() {
+        double monthlyRate = (interestRate / 100) / 12;
+        if (monthlyRate == 0) {
+            monthlyPayment = principal / termMonths;
+        } else {
+            monthlyPayment = (principal * monthlyRate) /
+                    (1 - Math.pow(1 + monthlyRate, -termMonths));
+        }
+    }
+
+    public double getMonthlyPayment() { return monthlyPayment; }
+    public double getTotalPayment() { return monthlyPayment * termMonths; }
+
+    public void displayLoanDetails() {
+        System.out.println("\n======= Loan Details =======");
+        System.out.println("Principal Amount: " + principal);
+        System.out.println("Interest Rate: " + interestRate + "%");
+        System.out.println("Term(Loan Duration): " + termMonths + " months");
+        System.out.println("Monthly Payment: " + String.format("%.2f", monthlyPayment));
+        System.out.println("Total Payment: " + String.format("%.2f", getTotalPayment()));
+        System.out.println("============================");
+    }
+}
+
 //Week-6 Part
-class Person {
+class Person{
     protected String name;
     protected String email;
 }
 
-//Updated User class that extends Person
-class User extends Person {
+//Updated User class that extends Person & implements ILogin...
+class User extends Person implements ILogin {
 
     private String username;
     private String password;
@@ -129,13 +179,16 @@ class User extends Person {
     public void setEmail(String email) { 
         this.email = email; 
     }
+    public boolean login(String username, String password) {
+        return this.username.equals(username) && this.password.equals(password);
+    }
 }
 
 /*---------------------------------------------------------------------------------------------------------*/
 //class BankAccount { ... }   // old code is above commented (Week-5)
 
 //Abstract Account class with subclasses
-abstract class Account {
+abstract class Account implements ITransaction{
     private static int accountCounter = 100; 
     protected int accountNumber;
     protected double balance;
@@ -441,7 +494,8 @@ for (int i = 0; i < domain.length; i++) {
                     System.out.println("Press 2 to Withdraw");
                     System.out.println("Press 3 to View Balance");
                     System.out.println("Press 4 to View Account Details");
-                    System.out.println("Press 5 to Logout");
+                    System.out.println("Press 5 to Apply for Loan");  // LOAN SECTION...
+                    System.out.println("Press 6 to Logout");          
                     System.out.println("===============================");
                     System.out.println();
                     System.out.print("Choose an option to Use our Facility: ");
@@ -470,8 +524,19 @@ for (int i = 0; i < domain.length; i++) {
                         System.out.println("Account Number: " + accounts[i].getAccountNumber());
                         System.out.println("Available Balance: " + accounts[i].getBalance());
                         System.out.println("===============================");
+                    }else if (option == 5) {//LOAN SECTION USED
 
-                    } else if (option == 5) {
+                        System.out.print("Enter Loan Amount: ");
+                        double principal = sc.nextDouble();
+                        System.out.print("Enter Annual Interest Rate (%): ");
+                        double rate = sc.nextDouble();
+                        System.out.print("Enter Term (Months): ");
+                        int term = sc.nextInt();
+
+                        //Here loan object created to access Loan class...
+                        Loan loan = new Loan(principal, rate, term);
+                        loan.displayLoanDetails();
+                    } else if (option == 6) {
                         System.out.println("Logout Successfully...");
                         break;
                     } else {
