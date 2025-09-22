@@ -91,6 +91,14 @@ import java.util.Scanner;
 }*/
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+//try catch Exception
+
+
+class InsufficientBalanceException extends Exception {
+    public InsufficientBalanceException(String msg) {
+        super(msg);
+    }
+}
 
 // Week 7: Interfaces
 interface ILogin {
@@ -108,11 +116,15 @@ class Loan {
     private double interestRate;
     private int termMonths;
     private double monthlyPayment;
+    private double remainingBalance;
+    private boolean active;
 
     public Loan(double principal, double interestRate, int termMonths) {
         this.principal = principal;
         this.interestRate = interestRate;
         this.termMonths = termMonths;
+        this.remainingBalance = principal;
+        this.active = true;
         calculateMonthlyPayment();
     }
 
@@ -125,10 +137,6 @@ class Loan {
                     (1 - Math.pow(1 + monthlyRate, -termMonths));
         }
     }
-
-    public double getMonthlyPayment() { return monthlyPayment; }
-    public double getTotalPayment() { return monthlyPayment * termMonths; }
-
     public void displayLoanDetails() {
         System.out.println("\n======= Loan Details =======");
         System.out.println("Principal Amount: " + principal);
@@ -138,7 +146,25 @@ class Loan {
         System.out.println("Total Payment: " + String.format("%.2f", getTotalPayment()));
         System.out.println("============================");
     }
+
+    public void makePayment() {
+        if (!active) {
+            System.out.println("Loan already repaid!");
+            return;
+        }
+        remainingBalance -= monthlyPayment;
+        System.out.println("Paid: " + monthlyPayment + " | Remaining: " + remainingBalance);
+        if (remainingBalance <= 0) {
+            active = false;
+            System.out.println(" Loan fully paid off!");
+        }
+    }
+    public double getMonthlyPayment() { return monthlyPayment; }
+    public double getTotalPayment() { return monthlyPayment * termMonths; }
+    public boolean isActive() { return active; }
 }
+
+
 
 //Week-6 Part
 class Person{
@@ -151,11 +177,20 @@ class User extends Person implements ILogin {
 
     private String username;
     private String password;
+    private Loan loan;
     
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;   // inherited from Person
         this.password = password;
+    }
+
+    public Loan getLoan() {
+        return loan;
+    }
+
+    public void setLoan(Loan loan) {
+        this.loan = loan;
     }
 
     public String getUsername() { 
@@ -226,11 +261,17 @@ abstract class Account implements ITransaction{
 class SavingAccount extends Account {
     //@Override
     public void withdraw(double amount) {
-        if (amount > 0 && balance - amount >= 500) {
-            balance -= amount;
-            System.out.println("Withdrawn: " + amount);
-        } else {
-            System.out.println("Insufficient balance! Savings account must keep at least Rs.500.");
+        try{
+            if (amount > 0 && balance - amount >= 500) {
+                balance -= amount;
+                System.out.println("Withdrawn: " + amount);
+            } else {
+                throw new InsufficientBalanceException("Insufficient balance! Savings account must keep at least Rs.500.");
+               
+            }
+        }
+        catch (InsufficientBalanceException e) {
+            System.out.println(e.getMessage());
         }
     }
 }
@@ -239,12 +280,18 @@ class SavingAccount extends Account {
 class CurrentAccount extends Account {
     //@Override
     public void withdraw(double amount) {
-        if (amount > 0 && balance - amount >= -1000) {
-            balance -= amount;
-            System.out.println("Withdrawn: " + amount);
-        } else {
-            System.out.println("Overdraft limit exceeded! You cannot withdraw this amount.");
+        try{    
+            if (amount > 0 && balance - amount >= -1000) {
+                balance -= amount;
+                System.out.println("Withdrawn: " + amount);
+            } else {
+                 throw new InsufficientBalanceException("Overdraft limit exceeded! You cannot withdraw this amount.");
+            }
         }
+        catch (InsufficientBalanceException e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 }
 /*---------------------------------------------------------------------------------------------------------*/
@@ -451,6 +498,8 @@ for (int i = 0; i < domain.length; i++) {
     }
 
 /*---------------------------------------------------------------------------------------------------------*/
+
+
     // Method-3 loginuser...
     void loginUser() {
 
@@ -473,12 +522,15 @@ for (int i = 0; i < domain.length; i++) {
             return;
         }
 
+   
         // Checks the Equality of the Login info. to Registration Info., if matched then return True value, else Error!
         for (int i = 0; i < n; i++) {
             // WITHOUT CLASS => if (!(usernames[i].equals(username) && passwords[i].equals(password) && emails[i].equals(email)))
             if(!(users[i].getUsername().equals(username) && users[i].getEmail().equals(email) && users[i].getPassword().equals(password))) {
+                
                 System.out.println("\nInvalid credentials!, Try again!");
             }
+        
             // (Else part) to Give 5 option Deposit, Withdraw, View Balance, View Acc.
             // Details & Logout facility.
             else {
@@ -495,7 +547,8 @@ for (int i = 0; i < domain.length; i++) {
                     System.out.println("Press 3 to View Balance");
                     System.out.println("Press 4 to View Account Details");
                     System.out.println("Press 5 to Apply for Loan");  // LOAN SECTION...
-                    System.out.println("Press 6 to Logout");          
+                    System.out.println("Press 6 to Pay Loan");  //LOAN PAY
+                    System.out.println("Press 7 to Logout");          
                     System.out.println("===============================");
                     System.out.println();
                     System.out.print("Choose an option to Use our Facility: ");
@@ -525,18 +578,10 @@ for (int i = 0; i < domain.length; i++) {
                         System.out.println("Available Balance: " + accounts[i].getBalance());
                         System.out.println("===============================");
                     }else if (option == 5) {//LOAN SECTION USED
-
-                        System.out.print("Enter Loan Amount: ");
-                        double principal = sc.nextDouble();
-                        System.out.print("Enter Annual Interest Rate (%): ");
-                        double rate = sc.nextDouble();
-                        System.out.print("Enter Term (Months): ");
-                        int term = sc.nextInt();
-
-                        //Here loan object created to access Loan class...
-                        Loan loan = new Loan(principal, rate, term);
-                        loan.displayLoanDetails();
-                    } else if (option == 6) {
+                        applyLoan(users[i]);
+                    }else if (option == 6) {//LOAN PAY SECTION USED
+                         payLoan(users[i], accounts[i]);
+                    }else if (option == 7) {
                         System.out.println("Logout Successfully...");
                         break;
                     } else {
@@ -549,4 +594,33 @@ for (int i = 0; i < domain.length; i++) {
     }
     // End of Method-3 loginuser...
  /*---------------------------------------------------------------------------------------------------------*/
+
+ //classes for apply loan and pay loan...
+private void applyLoan(User user) {
+    System.out.print("Enter principal amount: ");
+    double principal = sc.nextDouble();
+    System.out.print("Enter annual interest rate (%): ");
+    double rate = sc.nextDouble();
+    System.out.print("Enter term in months: ");
+    int term = sc.nextInt();
+
+    Loan loan = new Loan(principal, rate, term);
+    user.setLoan(loan);   
+    System.out.println("Loan approved! Monthly Payment: " + loan.getMonthlyPayment());
+}
+void payLoan(User user, Account account) {
+    Loan loan = user.getLoan();   
+    if (loan != null && loan.isActive()) {
+        if (account.getBalance() >= loan.getMonthlyPayment()) {
+            account.withdraw(loan.getMonthlyPayment());
+            loan.makePayment();
+        } else {
+            System.out.println("Not enough balance to pay loan.");
+        }
+    } else {
+        System.out.println("No active loan.");
+    }
+}
+
+    
 }
